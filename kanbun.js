@@ -4,29 +4,29 @@
    HTMLに変換するスクリプト */
 
 /* 漢文注記記法：
-   漢文     := 漢文単位+
-   漢文単位 := 漢字単位 読み仮名? 送り仮名* 再読仮名? 再読送り* 竪点? 訓点?
-   漢字単位 := 漢字 異体字選? | 句読点
-   漢字     := "[㐀-\9fff]|[豈-\faff]|[\ud840-\ud87f][\udc00-\udfff]"
-   句読点   := "[。、]"
-   異体字選 := "\udb40[\udd00-\uddef]" （異体字選択子：U+E0100...U+E01EF）
-   読み仮名 := 表示読み | 非表示読み
-   表示読み := "《" 仮名漢字* "》"
+   漢文       := 漢文単位+
+   漢文単位   := 漢字単位 読み仮名? 送り仮名* 再読仮名? 再読送り* 竪点? 訓点?
+   漢字単位   := 漢字 異体字選択? | 句読点
+   漢字       := "[㐀-\9fff]|[豈-\faff]|[\ud840-\ud87f][\udc00-\udfff]"
+   句読点     := "[。、]"
+   異体字選択 := "\udb40[\udd00-\uddef]" （異体字選択子：U+E0100...U+E01EF）
+   読み仮名   := 表示読み | 非表示読み
+   表示読み   := "《" 仮名漢字* "》"
         ※ 表示読みは、漢文・書き下し文の両方で漢字の脇に読みを表示する。
-   仮名漢字 := 仮名 | 漢字
-   仮名     := [ぁ-ヿ]
-   非表示読 := "〈" 仮名漢字* "〉"
-        ※ 非表示読みは、漢文では表示せず、書き下し文では仮名のみ表示する。
-        ※ 置き字の場合は非表示読みを〈〉として再読仮名を置かない。
-   送り仮名 := 仮名+ | "［＃（" 仮名漢字+ "）］"
+   仮名漢字   := 仮名 | 漢字
+   仮名       := [ぁ-ヿ]
+   非表示読み := "〈" 仮名漢字* "〉"
+        ※ 非表示読みは、漢文では読みを表示せず、書き下し文では読みのみ表示する。
+        ※ 置き字は非表示読みを空の〈〉として表現する。
+   送り仮名   := 仮名+ | "［＃（" 仮名漢字+ "）］"
         ※ 万葉仮名がある場合は、後者を使用する。
-   再読仮名 := 表示読み | 非表示読み
-   再読送り := 仮名+ | "［＃（" 仮名漢字+ "）］"
+   再読仮名   := 表示読み | 非表示読み
+   再読送り   := 仮名+ | "［＃（" 仮名漢字+ "）］"
         ※ 万葉仮名がある場合は、後者を使用する。
-   竪点     := "‐" ※ （仮定）竪点は２つ連続しない。
-   訓点     := "［＃" 訓点文字 "］"
-   訓点文字 := 順序点 | "[一上天甲]?レ"
-   順序点   := [一二三四上中下天地人甲乙丙丁]
+   竪点       := "‐" ※ （仮定）竪点は２つ連続しない。
+   訓点       := "［＃" 訓点文字 "］"
+   訓点文字   := 順序点 | "[一上天甲]?レ"
+   順序点     := [一二三四上中下天地人甲乙丙丁]
 */
 
 /* 例
@@ -49,25 +49,29 @@
 
 /* 上記の正規表現 */
 
-var kanji      = "[㐀-\u9fff]|[豈-\ufaff]|[\ud840-\ud87f][\udc00-\udfff]";
-var vselector  = "\udb40[\udd00-\uddef]";
-var kutouten   = "[。、]";
-var kanji_unit = "(?:" + kanji+"(?:"+vselector+")?|"+kutouten+")";
-var kana       = "[ぁ-ヿ]";
-var kana_kanji = kana+"|(?:"+kanji_unit+")";
-var hyouji     = "《(?:"+ kana_kanji + ")*》";
-var hihyouji   = "〈(?:"+ kana_kanji + ")*〉";
-var yomi       = "(?:" + hyouji +")|(?:" + hihyouji +")";
-var okuri      = kana + "+|［＃（(?:" + kana_kanji + ")+）］";
-var saidoku    = "(?:" + hyouji +")|(?:" + hihyouji +")";
-var saiokuri      = kana + "+|［＃（(?:" + kana_kanji + ")+）］";
-var tateten    = "‐";
-var junjo      = "[一二三四上中下天地人甲乙丙丁]";
-var kunten     = "［＃(?:"+junjo+"|[一上天甲]?レ)］";
+var kanbun_regex;
 
-var kanbun  = "(" +kanji_unit +")(" + yomi + ")?(" + okuri + ")?(" + saidoku +
+(function kanbun_regex_setup () {
+    var kanji      = "[㐀-\u9fff]|[豈-\ufaff]|[\ud840-\ud87f][\udc00-\udfff]";
+    var vselector  = "\udb40[\udd00-\uddef]";
+    var kutouten   = "[。、]";
+    var kanji_unit = "(?:" + kanji+"(?:"+vselector+")?|"+kutouten+")";
+    var kana       = "[ぁ-ヿ]";
+    var kana_kanji = kana+"|(?:"+kanji_unit+")";
+    var hyouji     = "《(?:"+ kana_kanji + ")*》";
+    var hihyouji   = "〈(?:"+ kana_kanji + ")*〉";
+    var yomi       = "(?:" + hyouji +")|(?:" + hihyouji +")";
+    var okuri      = kana + "+|［＃（(?:" + kana_kanji + ")+）］";
+    var saidoku    = "(?:" + hyouji +")|(?:" + hihyouji +")";
+    var saiokuri      = kana + "+|［＃（(?:" + kana_kanji + ")+）］";
+    var tateten    = "‐";
+    var junjo      = "[一二三四上中下天地人甲乙丙丁]";
+    var kunten     = "［＃(?:"+junjo+"|[一上天甲]?レ)］";
+
+    var kanbun  = "(" +kanji_unit +")(" + yomi + ")?(" + okuri + ")?(" + saidoku +
         ")?(" + saiokuri + ")?(" + tateten +")?(" + kunten + ")?";
-var kanbun_regex = new RegExp (kanbun);
+    kanbun_regex = new RegExp (kanbun);
+} ());
 
 // ＊＊＊＊＊＊＊＊ 関数名一覧 ＊＊＊＊＊＊＊＊
 //
@@ -219,10 +223,12 @@ function kanbun_to_kanbun (text, yomi, okuri, ten, kutou, unicode) {
     var split=kanbun_split(text);
     var result="";
     split.forEach(function(match) {
-        var kanji_part = kanbun_match_yomi(match,yomi,true);
-        var okuri_part = okuri? "<sup>"+kanbun_match_okuri(match)+"</sup>" :"";
-        var ten_part = ten?kanbun_match_ten(match,unicode):"";
-        result+="<nobr>"+ kanji_part + okuri_part + ten_part +"</nobr>";
+        if (!(!kutou && match[1].match(/[。、]/))) {
+            var kanji_part = kanbun_match_yomi(match,yomi,true);
+            var okuri_part = okuri? "<sup>"+kanbun_match_okuri(match)+"</sup>" :"";
+            var ten_part = ten?kanbun_match_ten(match,unicode):"";
+            result+="<nobr>"+ kanji_part + okuri_part + ten_part +"</nobr>";
+        }
     });
     return result;
 }
