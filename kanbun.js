@@ -153,59 +153,34 @@ function kanbun_match_yomi(match,yomi,kanbun) {
     return "<ruby>"+match[1]+"<rt>"+match[2].slice(1,-1)+"</rt></ruby>";
 }
 
-/**
- * match の送り文字の部分をHTMLにする。
- * @param {Array} match
- * @returns {string} 送り文字。
- */
-function kanbun_match_okuri(match) {
-    if (match[3] == undefined) return "";
-    if (match[3].match(/［＃（(.+?)）］/)) {
-        return RegExp.$1;
-    } else {
-        return match[3];
-    }
-}
-
-
-/**
- * match の訓点部分をHTMLにする。
- * @param {Array} match
- * @param {boolean} unicode
- * @returns {string} 訓点HTML。
- */
-function kanbun_match_ten(match,unicode) {
-    var tate= (match[6] == undefined)? "" : match[6];
-    var ten = (match[7] == undefined)? "" : match[7];
-    if (tate != "" || ten != "") {
-        if (ten.match(/［＃(.+?)］/)) {
-            ten = RegExp.$1;
-            ten = (unicode)?ten.replace(/(.)/g,kanbun_unicode[RegExp.$1]):
-                "<sub style='font-size: x-small;'>"+ten+"</sub>";
-        }
-        return tate+ten;
-    } else 
-        return "";
-}
-
 var kanbun_unicode = {"‐":"㆐","レ":"㆑","一":"㆒","二":"㆓",
                       "三":"㆔","四":"㆕","上":"㆖","中":"㆗",
                       "下":"㆘","甲":"㆙","乙":"㆚","丙":"㆛",
                       "丁":"㆜","天":"㆝","地":"㆞","人":"㆟"};
-/**
- * 訓点をHTMLに変換する。
- * @param {string} text 入力テキスト（順序点のみ）
- * @param {boolean} unicode Unicode訓点文字を使用するか
- * @returns {string} 変換テキスト
- */
-function kanbun_ten (text, unicode) {
-    if (unicode) {
-        return text.replace(/(.)/g,kanbun_unicode[RegExp.$1]);}
-    else {
-        return "<sub style='font-size: x-small;'>"+text+"</sub>";
-    }
-}
 
+/**
+ * match の送り・訓点部分をHTMLにする。
+ * @param {Array} match
+ * @param {boolean} unicode_p 訓点をUniocodeで表示する
+ * @param {boolean} okuri_p 送り仮名を表示する
+ * @param {boolean} ten_p 訓点を表示する
+ * @returns {string} 訓点HTML。
+ */
+function kanbun_match_okuri_ten(match,unicode_p,okuri_p,ten_p) {
+    // 送り文字
+    var okuri = ((okuri_p == false) || (match[3] == undefined))? "" : match[3];
+    var tate=   ((ten_p == false)   || (match[6] == undefined))? "" : match[6];
+    var ten =   ((ten_p == false)   || (match[7] == undefined))? "" : match[7].slice(2,-1);
+
+    if (okuri == "" && ten != "") okuri = "　";
+    if (okuri != "" && ten == "") ten = "　";
+    if (okuri != "" && ten != "") {
+        return "<table cellspacing='0' cellpadding='0' style='vertical-align: middle; display: inline-block; font-size: 50%;'><tr><td>"
+            + okuri + "</td></tr><tr><td>" + ten + "</td></tr></table>";
+        // TODO tate shori.
+    } else 
+        return "";
+}
 
 // ＊＊＊＊＊＊＊＊ 漢文処理 ＊＊＊＊＊＊＊＊
 
@@ -225,9 +200,8 @@ function kanbun_to_kanbun (text, yomi, okuri, ten, kutou, unicode) {
     split.forEach(function(match) {
         if (!(!kutou && match[1].match(/[。、]/))) {
             var kanji_part = kanbun_match_yomi(match,yomi,true);
-            var okuri_part = okuri? "<sup>"+kanbun_match_okuri(match)+"</sup>" :"";
-            var ten_part = ten?kanbun_match_ten(match,unicode):"";
-            result+="<nobr>"+ kanji_part + okuri_part + ten_part +"</nobr>";
+            var okuri_ten_part = kanbun_match_okuri_ten(match,unicode,okuri,ten);
+            result+="<nobr>"+ kanji_part + okuri_ten_part +"</nobr><wbr/>";
         }
     });
     return result;
@@ -339,7 +313,7 @@ function kanbun_to_kakikudashi (text,yomi,kutou){
     reordered.forEach(function(match) {
         var kanji_part = kanbun_match_yomi(match,yomi,false);
         var okuri_part = (match[3] != undefined)? match[3] : "";
-        result+="<nobr>"+kanji_part+okuri_part +"</nobr>";
+        result+="<nobr>"+kanji_part+okuri_part +"</nobr><wbr/>";
     });
     return result;
 }
