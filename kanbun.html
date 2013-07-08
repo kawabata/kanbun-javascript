@@ -13,148 +13,61 @@
 </head>
 <body>
 <h1>漢文訓読 JavaScript</h1>
-<p>
-  本JavaScriptは、同一の漢文データを「原文」、「訓読」、「読み下し文」の３つにわけて表示することを可能にします。利点は以下のとおりです。
-</p>
-<ul>
-  <li>青空文庫の拡張書式を応用しており、青空文庫の漢文形式に慣れた方ならすぐ利用できます。</li>
-  <li>通常のテキストエディタで簡単に原文から訓読漢文を作成できます。</li>
-  <li>原漢文の順序の情報を損ないません。</li>
-  <li>データに再利用性が高く、適当なフィルタを書けば好きなフォーマットに変更できます。</li>
-  <!--li>uplatex &amp; sfkanbun.sty の組み合わせで、多数の漢字に対応した美しい組版が可能です。</li-->
-</ul>
+<h2>サンプル</h2>
 
-<h4>使い方</h4>
-<p>
-例：まず、漢文原文をエディタで入力します。
-</p><pre>「吾嘗終日食、終夜不寝、以思。」
-</pre><p>
-次に、訓点を青空文庫形式で入力します。
-</p><pre>「吾嘗終日不［＃レ］食、終夜不［＃レ］寝、以思。」
-</pre><p>
-次に、送り仮名をカタカナ、ひらがなで漢字と訓点の<b>間に</b>入れます。
-</p><pre>「吾嘗テ終日不［＃レ］食ラハ、終夜不［＃レ］寝ネ、以テ思フ。」
-</pre>
-<p>※注意：青空文庫形式では、漢文の送り仮名は［＃（XX）］という形式で記入することになっていますが、
-カタカナ・ひらがなの場合は不要です。（稀に万葉仮名を用いる場合は、［＃（XX）］形式も利用可能です。）</p>
-<p>
-次に、読み仮名を「青空文庫形式」で挿入します。
-</p>
-<pre>「吾《われ》嘗《かつ》テ終《しゅう》日《じつ》不《ず》［＃レ］食《く》ラハ、
-終夜《しゅうや》不《ず》［＃レ］寝《い》ネ、以《もつ》テ思《おも》フ。」
-</pre>
-<p>
-このようにして作成した漢文を、HTMLファイルののkanbunクラスに入れます。
-なお、『「』や『」』（鍵括弧文字）など、漢字に関係ない文字を入れるとエラーになります。
-</p>
-<pre>「&lt;div class="kanbun"&gt;吾《われ》嘗《かつ》テ終《しゅう》日《じつ》不《ず》［＃レ］食《く》ラハ、
-終《しゅう》夜《や》不《ず》［＃レ］寝《い》ネ、以《もつ》テ思《おも》フ。&lt;/div&gt;」</pre>
-<p>
-HTMLのHEAD要素で、jquery.js と kanbun.jsを読み込ませます。
-</p>
-<pre>
-  &lt;script type='text/javascript' src='./js/jquery.js'&gt;&lt;/script&gt;
-  &lt;script type='text/javascript' src='./js/kanbun.js'&gt;&lt;/script&gt;
-</pre>
-<p>
-以下の関数を呼び出すことで、漢文を整形します。
-</p>
 <ul>
-  <li>kanbun_html_to_original("#ID") … 入力テキストを表示します。</li>
-  <li>kanbun_html_to_kanbun("#ID",bool,bool,bool,bool,bool) … 漢文を表示します。</li>
-  <li>kanbun_html_to_kakikudashi("#ID",bool,bool,bool) … 書き下し文を表示します。</li>
+  <li><a href="javascript:kanbun_html_to_original('');">入力テキスト</a></li>
+  <li><a href="javascript:kanbun_html_to_kanbun('',false,false,false,false,false);">原文（句読点なし）</a></li>
+  <li><a href="javascript:kanbun_html_to_kanbun('',false,false,false,true,false);">原文（句読点あり）</a></li>
+  <li><a href="javascript:kanbun_html_to_kanbun('',false,false,true,true,false);">訓点（ルビ・送り仮名なし）</a></li>
+  <li><a href="javascript:kanbun_html_to_kanbun('',false,true,true,true,false);">訓点（ルビなし）</a></li>
+  <li><a href="javascript:kanbun_html_to_kanbun('',true,true,true,true,false);">訓点</a></li>
+  <li><a href="javascript:kanbun_html_to_kakikudashi('',false,false);">書き下し文（ルビなし）</a></li>
+  <li><a href="javascript:kanbun_html_to_kakikudashi('',true,false);">書き下し文</a></li>
+  <li><a href="javascript:kanbun_html_to_kakikudashi('',true,true);">書き下し文（片仮名を平仮名に変換）</a></li>
 </ul>
-
-<p>
-以下はサンプルです。
-</p>
 
 <table>
-  <tr><th width="40%">漢文</th><th width="30%">解説</th><th width="30%"></th></tr>
+  <colgroup>
+    <col span="1" style="width: 50%;">
+    <col span="1" style="width: 50%;">
+  </colgroup>
+  <tr><th>漢文</th><th>解説</th></tr>
   <tr>
     <td id="sample1" class="kanbun"
         >秦王、以テ［＃二］十五城ヲ［＃一］請フ［＃レ］易《か》ヘンコトヲ［＃二］寡人之璧ニ［＃一］。可キヤ［＃レ］予《あた》フ不《いな》ヤ。</td>
     <td>レ点や一・二点はかならず送りがなの後ろに付加します。</td>
-    <td>
-      <a href="javascript:kanbun_html_to_original('#sample1');">入力テキスト</a>・
-      <a href="javascript:kanbun_html_to_kanbun('#sample1',false,false,false,false,false);">原文</a>・
-      <a href="javascript:kanbun_html_to_kanbun('#sample1',false,false,true,true,false);">訓点（ルビなし）</a>・
-      <a href="javascript:kanbun_html_to_kanbun('#sample1',true,true,true,true,false);">訓点</a>・
-      <a href="javascript:kanbun_html_to_kakikudashi('#sample1',true,true);">書き下し文</a><br/>
-    </td
   </tr>
   <tr>
     <td id="sample2" class="kanbun"
         >吾《われ》嘗《かつ》テ終《しゅう》日《じつ》不〈ズ〉［＃レ］食《く》ラハ、終《しゅう》夜《や》不〈ズ〉［＃レ］寝《い》ネ、以《もつ》テ思《おも》フ。</td>
     <td>書き下しの時に漢字ではなく読み仮名のみを表示させたい場合は、ルビに"《》"ではなく"〈〉"を用います。</td>
-    <td>
-      <a href="javascript:kanbun_html_to_original('#sample2');">入力テキスト</a>・
-      <a href="javascript:kanbun_html_to_kanbun('#sample2',false,false,false,false,false);">原文</a>・
-      <a href="javascript:kanbun_html_to_kanbun('#sample2',false,false,true,true,false);">訓点（ルビなし）</a>・
-      <a href="javascript:kanbun_html_to_kanbun('#sample2',true,true,true,true,false);">訓点</a>・
-      <a href="javascript:kanbun_html_to_kakikudashi('#sample2',true,true);">書き下し文</a><br/>
-    </td
   </tr>
   <tr>
     <td id="sample3" class="kanbun"
         >使〈シ〉メヨ［＃人］籍《せき》ヲシテ誠《まこと》ニ不〈〉〈ズ〉［＃乙］以《もつ》テ［＃下］蓄《やしな》ヒ［＃二］妻子ヲ［＃一］憂《うれ》フルヲ［＃中］飢《き》寒《かん》ヲ［＃上］乱サ［＃甲レ］心ヲ、有リテ［＃レ］銭《ぜに》以《もつ》テ済《な》サ［＃地］医薬ヲ［＃天］。</td>
     <td>対応する訓点には、上中下・甲乙丙丁・天地人があります。</td>
-    <td>
-      <a href="javascript:kanbun_html_to_original('#sample3');">入力テキスト</a>・
-      <a href="javascript:kanbun_html_to_kanbun('#sample3',false,false,false,false,false);">原文</a>・
-      <a href="javascript:kanbun_html_to_kanbun('#sample3',false,false,true,true,false);">訓点（ルビなし）</a>・
-      <a href="javascript:kanbun_html_to_kanbun('#sample3',true,true,true,true,false);">訓点</a>・
-      <a href="javascript:kanbun_html_to_kakikudashi('#sample3',true,true);">書き下し文</a><br/>
-    </td>
   </tr>
   <tr>
     <td id="sample4" class="kanbun"
-      >未《いま》だ〈ざ〉る［＃レ］足《た》ら［＃二］与《とも》に議するに［＃一］也。</td>
+      >未《いま》ダ〈ざ〉ル［＃レ］足《た》ラ［＃二］与《とも》ニ議スルニ［＃一］也。</td>
     <td>再読文は、『【漢字】《【よみ】》【送り仮名】〈【再読よみ】〉【再読送り仮名】』で表現します。</td>
-    <td>
-      <a href="javascript:kanbun_html_to_original('#sample4');">入力テキスト</a>・
-      <a href="javascript:kanbun_html_to_kanbun('#sample4',false,false,false,false,false);">原文</a>・
-      <a href="javascript:kanbun_html_to_kanbun('#sample4',false,false,true,true,false);">訓点（ルビなし）</a>・
-      <a href="javascript:kanbun_html_to_kanbun('#sample4',true,true,true,true,false);">訓点</a>・
-      <a href="javascript:kanbun_html_to_kakikudashi('#sample4',true,true);">書き下し文</a><br/>
-    </td>
   </tr>
   <tr>
     <td id="sample5" class="kanbun"
       >盍《なん》ゾ〈ザ〉ル［＃レ］反《かへ》ラ［＃二］其ノ本ニ［＃一］矣〈〉。</td>
     </td>
     <td>置き字は、その漢字の後ろに空の〈〉を付します。</td>
-    <td>
-      <a href="javascript:kanbun_html_to_original('#sample5');">入力テキスト</a>・
-      <a href="javascript:kanbun_html_to_kanbun('#sample5',false,false,false,false,false);">原文</a>・
-      <a href="javascript:kanbun_html_to_kanbun('#sample5',false,false,true,true,false);">訓点（ルビなし）</a>・
-      <a href="javascript:kanbun_html_to_kanbun('#sample5',true,true,true,true,false);">訓点</a>・
-      <a href="javascript:kanbun_html_to_kakikudashi('#sample5',true,true);">書き下し文</a><br/>
-    </td>
   <tr>
     <td id="sample6" class="kanbun"
       >引キテ［＃レ］酒ヲ且ニ〈ス〉［＃レ］飲マント［＃レ］之ヲ。</td>
     </td>
     <td>再読文字で、最初の読みがない場合は省略できます。</td>
-    <td>
-      <a href="javascript:kanbun_html_to_original('#sample6');">入力テキスト</a>・
-      <a href="javascript:kanbun_html_to_kanbun('#sample6',false,false,false,false,false);">原文</a>・
-      <a href="javascript:kanbun_html_to_kanbun('#sample6',false,false,true,true,false);">訓点（ルビなし）</a>・
-      <a href="javascript:kanbun_html_to_kanbun('#sample6',true,true,true,true,false);">訓点</a>・
-      <a href="javascript:kanbun_html_to_kakikudashi('#sample6',true,true);">書き下し文</a><br/>
-    </td>
   <tr>
     <td id="sample7" class="kanbun"
       >孤之〈ノ〉有ルハ［＃二］孔明［＃一］、猶《な》ホ〈ゴト〉シ［＃二］魚之〈ノ〉有ルガ［＃一レ］水。</td>
     </td>
     <td>再読文字で、再読文字に送り仮名がある場合は、〈…〉の後ろに送り仮名を入れます。</td>
-    <td>
-      <a href="javascript:kanbun_html_to_original('#sample7');">入力テキスト</a>・
-      <a href="javascript:kanbun_html_to_kanbun('#sample7',false,false,false,false,false);">原文</a>・
-      <a href="javascript:kanbun_html_to_kanbun('#sample7',false,false,true,true,false);">訓点（ルビなし）</a>・
-      <a href="javascript:kanbun_html_to_kanbun('#sample7',true,true,true,true,false);">訓点</a>・
-      <a href="javascript:kanbun_html_to_kakikudashi('#sample7',true,true);">書き下し文</a><br/>
-    </td>
   </tr>
 </table>
 </div>

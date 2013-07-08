@@ -1,9 +1,13 @@
-/* 漢文表示 JavaScript */
+/** @fileoverview
+ * 漢文訓読 JavaScript -- 
+ * 注記を施した漢文を、漢文または書き下し文のHTMLに変換する。
+ *
+ * @author KAWABATA, Taichi
+ * @version 0.1
+ */
 
-/* 漢文を表現するための青空文庫に倣ったマークアップ言語と、それを
-   HTMLに変換するスクリプト */
-
-/* 漢文注記記法：
+/*
+ 漢文注記記法：
    漢文       := 漢文単位+
    漢文単位   := 漢字単位 読み仮名? 送り仮名* 再読仮名? 再読送り* 竪点? 訓点?
    漢字単位   := 漢字 異体字選択? | 句読点
@@ -28,27 +32,6 @@
    訓点文字   := 順序点 | "[一上天甲]?レ"
    順序点     := [一二三四上中下天地人甲乙丙丁]
 */
-
-/* 例
- - 引キテ［＃レ］酒ヲ且《》二〈ス〉［＃レ］飲マント［＃レ］之ヲ。
-   → 引酒且飲之。（漢文）
-   → 酒ヲ引キテ且二之ヲ飲マントス。（書き下し）
-
- - 孤之〈ノ〉有ルハ［＃二］孔明［＃一］、猶《な》ホ〈ゴト〉シ［＃二］魚之〈ノ〉有ルガ［＃一レ］水。
-   → 孤之有孔明、猶魚之有水。（漢文）
-   → 孤ノ孔明有ルハ、猶《な》ホ魚ノ水有ルガゴトシ。（書き下し）
-
- - 青ハ取リテ［＃二］之ヲ於〈〉藍ヨリ［＃一］而〈〉青シ［＃二］於〈〉藍ヨリモ［＃一］
-   → 青取之於藍而青於藍（漢文）
-   → 青ハ之ヲ藍ヨリ取リテ藍ヨリモ青シ（書き下し）
-
- - 使〈シ〉メヨ［＃人］籍《せき》ヲシテ誠《まこと》ニ不〈〉〈ズ〉［＃乙］以《もつ》テ［＃下］蓄《やしな》ヒ［＃二］妻子ヲ［＃一］憂《うれ》フルヲ［＃中］飢寒《きかん》ヲ［＃上］乱サ［＃甲レ］心ヲ、有リテ［＃レ］銭《ぜに》以《もつ》テ済《な》サ［＃地］医薬ヲ［＃天］。
-   → 使籍誠不以蓄妻子憂飢寒乱心有銭以済医薬。（漢文）
-   → 籍《せき》ヲシテ誠《まこと》ニ妻子ヲ蓄《やしな》ヒ飢寒《きかん》ヲ憂《うれ》フルヲ以《もつ》テ心ヲ乱サズ、銭《ぜに》有リテ以《もつ》テ医薬ヲ済《な》サシメヨ。（書き下し）
-*/
-
-/* 上記の正規表現 */
-
 var kanbun_regex;
 
 (function kanbun_regex_setup () {
@@ -73,18 +56,11 @@ var kanbun_regex;
     kanbun_regex = new RegExp (kanbun);
 } ());
 
-// ＊＊＊＊＊＊＊＊ 関数名一覧 ＊＊＊＊＊＊＊＊
-//
-// kanbun_to_kanbun      元データを漢文に変換する。 
-// kanbun_to_kakikudashi 元データを書き下しに変換する。 
-// kanbun_html_to_kanbun      HTMLの元データを漢文に変換する。 
-// kanbun_html_to_kakikudashi HTMLの元データを書き下しに変換する。 
-
-
 // ＊＊＊＊＊＊＊＊ 基本機能 ＊＊＊＊＊＊＊＊
 
 /**
  * 配列からの要素の削除
+ * @private
  */
 Array.prototype.remove = function() {
     var what, a = arguments, L = a.length, ax;
@@ -99,6 +75,7 @@ Array.prototype.remove = function() {
 
 /**
  * 配列の複製（配列要素の複製はしない）
+ * @private
  */
 Array.prototype.clone = function(){
     return Array.apply(null,this);
@@ -109,8 +86,10 @@ Array.prototype.clone = function(){
 
 /**
  * 漢文を漢字単位に分割する。
+ * @private
  * @param {string} text 元データ
- * @returns {Array} matchの配列
+ * @returns matchの配列
+ * @type {Array} 
  */
 function kanbun_split (text) {
     var result=[];
@@ -134,23 +113,39 @@ function kanbun_split (text) {
 
 /**
  * match の漢字・読みの部分をHTMLにする。
+ * @private
  * @param {Array} match
- * @param {boolean} yomi 漢字に読みを表示する
- * @param {boolean} kanbun 漢文。〈…〉は、漢字のみを表示する。
+ * @param {boolean} yomi_p 漢字に読みを表示する。
+ * @param {boolean} kanbun_p 漢文ならtrue, 書き下し文ならfalse。
+ *   trueなら、〈…〉は、漢字のみを表示し、falseなら仮名のみを表示する。
+ * @param {boolean} saidoku_p 再読文字をHTML5 左ルビ仕様で表示する。
  * @returns {string} 読み付き漢字。rubyがfalseか読みがない場合は漢字のみ。
  *       〈…〉は kanbun がtrueなら漢字のみ。falseなら読みのみ。
  *       《…》なら<ruby>タグで返す。
  */
-function kanbun_match_yomi(match,yomi,kanbun) {
-    if (yomi == false ||  match[2] == undefined) {return match[1];}
-    else if (match[2].match(/^〈/)) {
-        if (kanbun) {
-            return match[1];
+// TODO 再読文字の左ルビは未対応。
+function kanbun_match_yomi(match,yomi_p,kanbun_p) {
+    var kanji=match[1];
+    var yomi=match[2];
+    var saidoku=match[4];
+    // 特殊ケース
+    if (yomi != undefined && yomi.match(/^〈/)) {
+        if (kanbun_p) {
+            return kanji;
         } else {
-            return match[2].slice(1,-1);
+            return yomi.slice(1,-1);
         }
-    }
-    return "<ruby>"+match[1]+"<rt>"+match[2].slice(1,-1)+"</rt></ruby>";
+    } else if (!yomi_p) return kanji;
+    // ruby 
+    if (yomi == undefined && saidoku==undefined) {return kanji;}
+    var result="<ruby>"+kanji+
+            ((yomi == undefined)?
+             "<rt></rt>":"<rp>（</rp><rt>"+yomi.slice(1,-1)+"</rt><rp>）</rp>")+
+            // 書き下しでは再読文字にルビは入れない。
+            ((kanbun_p==false || saidoku==undefined)?
+             "":"<rp>［</rp><rt>"+saidoku.slice(1,-1)+"</rt><rp>］</rp>")+
+            "</ruby>";
+    return result;
 }
 
 var kanbun_unicode = {"‐":"㆐","レ":"㆑","一":"㆒","二":"㆓",
@@ -160,6 +155,7 @@ var kanbun_unicode = {"‐":"㆐","レ":"㆑","一":"㆒","二":"㆓",
 
 /**
  * match の送り・訓点部分をHTMLにする。
+ * @private
  * @param {Array} match
  * @param {boolean} unicode_p 訓点をUniocodeで表示する
  * @param {boolean} okuri_p 送り仮名を表示する
@@ -182,7 +178,34 @@ function kanbun_match_okuri_ten(match,unicode_p,okuri_p,ten_p) {
         return "";
 }
 
-// ＊＊＊＊＊＊＊＊ 漢文処理 ＊＊＊＊＊＊＊＊
+// ＊＊＊＊＊＊＊＊ 漢文 ＊＊＊＊＊＊＊＊
+
+/**
+ * 文字列中のカタカナを平仮名にする。
+ * @private
+ * @param {string} text 元文字列
+ * @returns 変換文字列
+ * @type string
+ */
+function kanbun_katakana_to_hiragana (text) {
+    var result=text.replace(/[ァ-ヶ]/g,function(whole) {
+        var hiragana= whole.charCodeAt(0)-96;
+        return String.fromCharCode(hiragana);
+    });
+    return result;
+}
+
+/**
+ * 句読点の前の<wbr>を除去する。
+ * @private
+ * @param {string} html 元HTML
+ * @returns 変換HTML
+ * @type string
+ */
+function kanbun_remove_kutou_break(html) {
+    var result=html.replace(/<\/nobr><wbr\/><nobr>([。、])/g,"$1");
+    return result;
+}
 
 /**
  * 漢文をHTMLに変換する。
@@ -192,7 +215,8 @@ function kanbun_match_okuri_ten(match,unicode_p,okuri_p,ten_p) {
  * @param {boolean} ten 漢文順序点表示
  * @param {boolean} kutou 句読点表示
  * @param {boolean} unicode 漢文順序にユニコードを使用
- * @returns {string} HTMLデータ
+ * @returns HTMLデータ
+ * @type string
  */
 function kanbun_to_kanbun (text, yomi, okuri, ten, kutou, unicode) {
     var split=kanbun_split(text);
@@ -204,13 +228,14 @@ function kanbun_to_kanbun (text, yomi, okuri, ten, kutou, unicode) {
             result+="<nobr>"+ kanji_part + okuri_ten_part +"</nobr><wbr/>";
         }
     });
-    return result;
+    return kanbun_remove_kutou_break(result);
 }
 
-// ＊＊＊＊＊＊＊＊ 書き下し文・処理 ＊＊＊＊＊＊＊＊
+// ＊＊＊＊＊＊＊＊ 書き下し文 ＊＊＊＊＊＊＊＊
 
 /**
  * 漢文の順序を書き下し文の順序の分割した配列に変換する。
+ * @private
  * @param {string} text 入力
  * @param {boolean} unicode 訓点文字
  * @returns {array} 順序を入れ替えた配列
@@ -304,10 +329,11 @@ function kanbun_reorder (text){
  * 漢文を書き下し文に変換する。
  * @param {string} text 元データ
  * @param {boolean} yomi 読み表示
- * @param {boolean} kutou 句読点表示
- * @returns {string} HTMLデータ
+ * @param {boolean} hiragana カタカナを平仮名に変換
+ * @returns HTMLデータ
+ * @type string
  */
-function kanbun_to_kakikudashi (text,yomi,kutou){
+function kanbun_to_kakikudashi (text,yomi,hiragana){
     var reordered=kanbun_reorder(text);
     var result="";
     reordered.forEach(function(match) {
@@ -315,7 +341,8 @@ function kanbun_to_kakikudashi (text,yomi,kutou){
         var okuri_part = (match[3] != undefined)? match[3] : "";
         result+="<nobr>"+kanji_part+okuri_part +"</nobr><wbr/>";
     });
-    return result;
+    if (hiragana) result=kanbun_katakana_to_hiragana(result);
+    return kanbun_remove_kutou_break(result);
 }
 
 
@@ -326,6 +353,7 @@ function kanbun_to_kakikudashi (text,yomi,kutou){
 
 /**
  * text中の <!--XXXX--> の部分を返す。
+ * @private
  */
 function kanbun_orig_text (text) {
     var orig_text;
@@ -338,7 +366,8 @@ function kanbun_orig_text (text) {
 };
 
 /**
- * IDノードの、<!--XXXX--> で保存されている原データをもとに戻す。
+ * HTMLのIDノードの、<!--XXXX--> で保存されている原データをもとに戻す。
+ * @private
  * @param {string} id HTML node
  * @returns {none}
  */
@@ -350,14 +379,14 @@ function kanbun_html_to_original (id) {
 }
 
 /**
- * IDノードを漢文に変換する。
+ * HTMLのIDノードを漢文に変換する。（要jQuery）
  * @param {string} id HTML node
  * @param {boolean} yomi 読み仮名表示
  * @param {boolean} okuri 送り仮名表示
  * @param {boolean} ten 漢文順序点表示
  * @param {boolean} kutou 句読点表示
  * @param {boolean} unicode 漢文順序にユニコードを使用
- * @returns {none}
+ * @type {none}
  */
 function kanbun_html_to_kanbun (id,yomi,okuri,ten,kutou,unicode) {
     $(id+"[class=kanbun]").each(function () {
@@ -368,16 +397,16 @@ function kanbun_html_to_kanbun (id,yomi,okuri,ten,kutou,unicode) {
 }
 
 /**
- * IDノードを書き下し文に変換する。
+ * HTMLのIDノードを書き下し文に変換する。（要jQuery）
  * @param {string} id HTML node
  * @param {boolean} yomi 読み表示
- * @param {boolean} kutou 句読点表示
- * @returns {none}
+ * @param {boolean} hiragana カタカナを平仮名に変換
+ * @type {none}
  */
-function kanbun_html_to_kakikudashi (id,yomi,kutou) {
+function kanbun_html_to_kakikudashi (id,yomi,hiragana) {
     $(id+"[class=kanbun]").each(function () {
         var orig_text=kanbun_orig_text($(this).html());
-        var new_text=kanbun_to_kakikudashi(orig_text,yomi,kutou);
+        var new_text=kanbun_to_kakikudashi(orig_text,yomi,hiragana);
         $(this).html(new_text+"<!--"+orig_text+"-->");
     });
 }
