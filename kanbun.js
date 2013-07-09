@@ -154,7 +154,19 @@ var kanbun_unicode = {"‐":"㆐","レ":"㆑","一":"㆒","二":"㆓",
                       "丁":"㆜","天":"㆝","地":"㆞","人":"㆟"};
 
 /**
- * match の送り・訓点部分をHTMLにする。
+ * match の送り仮名部分を返す。
+ * （送り仮名がない場合は空文字を返す。）
+ * @private
+ * @param {Array} match
+ * @returns {string} 送り仮名部分
+ */
+function kanbun_match_okuri (match) {
+    var okuri = (match[3] != undefined)? match[3] : "";
+    return (okuri.match(/^［＃（/)) ? okuri.slice(3,-2):okuri;
+}
+
+/**
+ * match の送り・訓点部分をHTMLにする。（漢文訓読）
  * @private
  * @param {Array} match
  * @param {boolean} unicode_p 訓点をUniocodeで表示する
@@ -164,7 +176,7 @@ var kanbun_unicode = {"‐":"㆐","レ":"㆑","一":"㆒","二":"㆓",
  */
 function kanbun_match_okuri_ten(match,unicode_p,okuri_p,ten_p) {
     // 送り文字
-    var okuri = ((okuri_p == false) || (match[3] == undefined))? "" : match[3];
+    var okuri = (okuri_p == false) ? "" : kanbun_match_okuri(match);
     var tate=   ((ten_p == false)   || (match[6] == undefined))? "" : match[6];
     var ten =   ((ten_p == false)   || (match[7] == undefined))? "" : match[7].slice(2,-1);
 
@@ -338,7 +350,7 @@ function kanbun_to_kakikudashi (text,yomi,hiragana){
     var result="";
     reordered.forEach(function(match) {
         var kanji_part = kanbun_match_yomi(match,yomi,false);
-        var okuri_part = (match[3] != undefined)? match[3] : "";
+        var okuri_part = kanbun_match_okuri(match);
         result+="<nobr>"+kanji_part+okuri_part +"</nobr><wbr/>";
     });
     if (hiragana) result=kanbun_katakana_to_hiragana(result);
