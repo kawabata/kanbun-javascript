@@ -10,6 +10,16 @@
     -webkit-writing-mode: vertical-rl;
     }
   </style>
+  <script type="text/javascript">
+    function convert_kanbun() {
+      var input=document.getElementById('input').value;
+      document.getElementById('output').value=kanbun_to_kanbun(input,true,true,true,true.false);
+    }
+    function convert_kakikudashi() {
+      var input=document.getElementById('input').value;
+      document.getElementById('output').value=kanbun_to_kakikudashi(input,true,false);
+    }
+  </script>
 </head>
 <body>
 <h1>漢文訓読 JavaScript</h1>
@@ -75,6 +85,12 @@
     <td>再読文字で、再読文字に送り仮名がある場合は、〈…〉の後ろに送り仮名を入れます。</td>
   </tr>
 </table>
+<form name="convert">
+<textarea rows="30" size="30" id="input">未《いま》ダ〈ざ〉ル［＃レ］足《た》ラ［＃二］与《とも》ニ議スルニ［＃一］也。</textarea><br/>
+<textarea rows="30" size="30" id="output"></textarea><br/>
+<input type="button" value="漢文へ" onClick="convert_kanbun();"><br/>
+<input type="button" value="書き下しへ" onClick="convert_kakikudashi();"><br/>
+</form>
 </div>
 </body>
 </html>
