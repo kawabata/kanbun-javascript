@@ -38,10 +38,9 @@
 
 ## 利用方法
 
-HTMLで利用する場合は、jqueryが必要です。
+HTMLで利用する場合は、kanbun.js を読み込むだけで利用可能です。
 
-    <script type='text/javascript' src='./js/jquery.js'></script>
-    <script type='text/javascript' src='./js/kanbun.js'></script>
+    <script src='./js/kanbun.js'></script>
 
 以下の関数を呼び出すことで、漢文を整形します。IDを空文字列にすれば、全てのkanbunクラスのタグが処理対象になります。
 

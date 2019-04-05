@@ -1,8 +1,8 @@
-<html>
+<!DOCTYPE html>
+<html lang="ja">
 <head>
   <title>漢文訓読 JavaScript</title>
-  <meta http-equiv='Content-Type' content='text/html; charset=utf-8'/>
-  <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js" ></script>
+  <meta charset="utf-8">
   <script src="kanbun.js" type="text/javascript" charset="utf-8"></script>
   <style type="text/css">
     body {
@@ -12,11 +12,11 @@
   </style>
   <script type="text/javascript">
     function convert_kanbun() {
-      var input=document.getElementById('input').value;
+      const input=document.getElementById('input').value;
       document.getElementById('output').value=kanbun_to_kanbun(input,true,true,true,true.false);
     }
     function convert_kakikudashi() {
-      var input=document.getElementById('input').value;
+      const input=document.getElementById('input').value;
       document.getElementById('output').value=kanbun_to_kakikudashi(input,true,false);
     }
   </script>
