@@ -2,8 +2,9 @@
  * 漢文訓読 JavaScript -- 
  * 注記を施した漢文を、漢文または書き下し文のHTMLに変換する。
  *
+ * @author Teruyuki Kobayashi
  * @author KAWABATA, Taichi
- * @version 0.1
+ * @version 0.2
  */
 
 /*
@@ -32,29 +33,28 @@
    訓点文字   := 順序点 | "[一上天甲]?レ"
    順序点     := [一二三四上中下天地人甲乙丙丁]
 */
-var kanbun_regex;
 
-(function kanbun_regex_setup () {
-    var kanji      = "[㐀-\u9fff]|[豈-\ufaff]|[\ud840-\ud87f][\udc00-\udfff]";
-    var vselector  = "\udb40[\udd00-\uddef]";
-    var kutouten   = "[。、]";
-    var kanji_unit = "(?:" + kanji+"(?:"+vselector+")?|"+kutouten+")";
-    var kana       = "[ぁ-ヿ]";
-    var kana_kanji = kana+"|(?:"+kanji_unit+")";
-    var hyouji     = "《(?:"+ kana_kanji + ")*》";
-    var hihyouji   = "〈(?:"+ kana_kanji + ")*〉";
-    var yomi       = "(?:" + hyouji +")|(?:" + hihyouji +")";
-    var okuri      = kana + "+|［＃（(?:" + kana_kanji + ")+）］";
-    var saidoku    = "(?:" + hyouji +")|(?:" + hihyouji +")";
-    var saiokuri      = kana + "+|［＃（(?:" + kana_kanji + ")+）］";
-    var tateten    = "‐";
-    var junjo      = "[一二三四上中下天地人甲乙丙丁]";
-    var kunten     = "［＃(?:"+junjo+"|[一上天甲]?レ)］";
+function kanbun_regex_setup() {
+    const kanji      = "[㐀-\u9fff]|[豈-\ufaff]|[\ud840-\ud87f][\udc00-\udfff]";
+    const vselector  = "\udb40[\udd00-\uddef]";
+    const kutouten   = "[。、]";
+    const kanji_unit = "(?:" + kanji+"(?:"+vselector+")?|"+kutouten+")";
+    const kana       = "[ぁ-ヿ]";
+    const kana_kanji = kana+"|(?:"+kanji_unit+")";
+    const hyouji     = "《(?:"+ kana_kanji + ")*》";
+    const hihyouji   = "〈(?:"+ kana_kanji + ")*〉";
+    const yomi       = "(?:" + hyouji +")|(?:" + hihyouji +")";
+    const okuri      = kana + "+|［＃（(?:" + kana_kanji + ")+）］";
+    const saidoku    = "(?:" + hyouji +")|(?:" + hihyouji +")";
+    const saiokuri      = kana + "+|［＃（(?:" + kana_kanji + ")+）］";
+    const tateten    = "‐";
+    const junjo      = "[一二三四上中下天地人甲乙丙丁]";
+    const kunten     = "［＃(?:"+junjo+"|[一上天甲]?レ)］";
 
-    var kanbun  = "(" +kanji_unit +")(" + yomi + ")?(" + okuri + ")?(" + saidoku +
+    const kanbun  = "(" +kanji_unit +")(" + yomi + ")?(" + okuri + ")?(" + saidoku +
         ")?(" + saiokuri + ")?(" + tateten +")?(" + kunten + ")?";
-    kanbun_regex = new RegExp (kanbun);
-} ());
+    return new RegExp (kanbun);
+}
 
 // ＊＊＊＊＊＊＊＊ 基本機能 ＊＊＊＊＊＊＊＊
 
@@ -63,7 +63,7 @@ var kanbun_regex;
  * @private
  */
 Array.prototype.remove = function() {
-    var what, a = arguments, L = a.length, ax;
+    let what, a = arguments, L = a.length, ax;
     while (L && this.length) {
         what = a[--L];
         while ((ax = this.indexOf(what)) !== -1) {
@@ -91,10 +91,11 @@ Array.prototype.clone = function(){
  * @returns matchの配列
  * @type {Array} 
  */
-function kanbun_split (text) {
-    var result=[];
+function kanbun_split(text) {
+    let result = [];
+    const kanbun_regex = kanbun_regex_setup();
     while (text.length > 0) {
-        var match = text.match(kanbun_regex);
+        const match = text.match(kanbun_regex);
         if (match == null) {
             console.log(text);
             alert("Parse Error! see console log.");
@@ -105,7 +106,7 @@ function kanbun_split (text) {
             alert("Parse Error! see console log.");
             return -1;
         }
-        text=text.substring(match[0].length);
+        text = text.substring(match[0].length);
         result = result.concat([match]);
     }
     return result;
@@ -125,9 +126,9 @@ function kanbun_split (text) {
  */
 // TODO 再読文字の左ルビは未対応。
 function kanbun_match_yomi(match,yomi_p,kanbun_p) {
-    var kanji=match[1];
-    var yomi=match[2];
-    var saidoku=match[4];
+    const kanji = match[1];
+    const yomi = match[2];
+    const saidoku = match[4];
     // 特殊ケース
     if (yomi != undefined && yomi.match(/^〈/)) {
         if (kanbun_p) {
@@ -137,18 +138,18 @@ function kanbun_match_yomi(match,yomi_p,kanbun_p) {
         }
     } else if (!yomi_p) return kanji;
     // ruby 
-    if (yomi == undefined && saidoku==undefined) {return kanji;}
-    var result="<ruby>"+kanji+
+    if (yomi == undefined && saidoku == undefined) {return kanji;}
+    const result="<ruby>"+kanji+
             ((yomi == undefined)?
              "<rt></rt>":"<rp>（</rp><rt>"+yomi.slice(1,-1)+"</rt><rp>）</rp>")+
             // 書き下しでは再読文字にルビは入れない。
-            ((kanbun_p==false || saidoku==undefined)?
+            ((kanbun_p == false || saidoku == undefined)?
              "":"<rp>［</rp><rt>"+saidoku.slice(1,-1)+"</rt><rp>］</rp>")+
             "</ruby>";
     return result;
 }
 
-var kanbun_unicode = {"‐":"㆐","レ":"㆑","一":"㆒","二":"㆓",
+const kanbun_unicode = {"‐":"㆐","レ":"㆑","一":"㆒","二":"㆓",
                       "三":"㆔","四":"㆕","上":"㆖","中":"㆗",
                       "下":"㆘","甲":"㆙","乙":"㆚","丙":"㆛",
                       "丁":"㆜","天":"㆝","地":"㆞","人":"㆟"};
@@ -161,7 +162,7 @@ var kanbun_unicode = {"‐":"㆐","レ":"㆑","一":"㆒","二":"㆓",
  * @returns {string} 送り仮名部分
  */
 function kanbun_match_okuri (match) {
-    var okuri = (match[3] != undefined)? match[3] : "";
+    const okuri = (match[3] != undefined)? match[3] : "";
     return (okuri.match(/^［＃（/)) ? okuri.slice(3,-2):okuri;
 }
 
@@ -176,9 +177,9 @@ function kanbun_match_okuri (match) {
  */
 function kanbun_match_okuri_ten(match,unicode_p,okuri_p,ten_p) {
     // 送り文字
-    var okuri = (okuri_p == false) ? "" : kanbun_match_okuri(match);
-    var tate=   ((ten_p == false)   || (match[6] == undefined))? "" : match[6];
-    var ten =   ((ten_p == false)   || (match[7] == undefined))? "" : match[7].slice(2,-1);
+    let okuri = (okuri_p == false) ? "" : kanbun_match_okuri(match);
+    let tate = ((ten_p == false) || (match[6] == undefined))? "" : match[6];
+    let ten = ((ten_p == false) || (match[7] == undefined))? "" : match[7].slice(2,-1);
 
     if (okuri == "" && ten != "") okuri = "　";
     if (okuri != "" && ten == "") ten = "　";
@@ -200,8 +201,8 @@ function kanbun_match_okuri_ten(match,unicode_p,okuri_p,ten_p) {
  * @type string
  */
 function kanbun_katakana_to_hiragana (text) {
-    var result=text.replace(/[ァ-ヶ]/g,function(whole) {
-        var hiragana= whole.charCodeAt(0)-96;
+    const result = text.replace(/[ァ-ヶ]/g, whole=>{
+        const hiragana = whole.charCodeAt(0)-96;
         return String.fromCharCode(hiragana);
     });
     return result;
@@ -215,7 +216,7 @@ function kanbun_katakana_to_hiragana (text) {
  * @type string
  */
 function kanbun_remove_kutou_break(html) {
-    var result=html.replace(/<\/nobr><wbr\/><nobr>([。、])/g,"$1");
+    const result = html.replace(/<\/nobr><wbr\/><nobr>([。、])/g,"$1");
     return result;
 }
 
@@ -231,12 +232,12 @@ function kanbun_remove_kutou_break(html) {
  * @type string
  */
 function kanbun_to_kanbun (text, yomi, okuri, ten, kutou, unicode) {
-    var split=kanbun_split(text);
-    var result="";
-    split.forEach(function(match) {
+    const split = kanbun_split(text);
+    let result = "";
+    split.forEach(match=>{
         if (!(!kutou && match[1].match(/[。、]/))) {
-            var kanji_part = kanbun_match_yomi(match,yomi,true);
-            var okuri_ten_part = kanbun_match_okuri_ten(match,unicode,okuri,ten);
+            const kanji_part = kanbun_match_yomi(match,yomi,true);
+            const okuri_ten_part = kanbun_match_okuri_ten(match,unicode,okuri,ten);
             result+="<nobr>"+ kanji_part + okuri_ten_part +"</nobr><wbr/>";
         }
     });
@@ -252,36 +253,36 @@ function kanbun_to_kanbun (text, yomi, okuri, ten, kutou, unicode) {
  * @param {boolean} unicode 訓点文字
  * @returns {array} 順序を入れ替えた配列
  */
-function kanbun_reorder (text){
-    var kunten_flag="", reten_flag=false, tate_flag=false;
-    var split_text=kanbun_split (text);
-    var kanbun_two=null, kanbun_three=null, kanbun_four=null;
-    var kanbun_middle=null, kanbun_down=null;
-    var kanbun_otsu=null, kanbun_hei=null, kanbun_tei=null;
-    var kanbun_chi=null, kanbun_jin=null;
-    var stock=new Array();
-    var result=new Array();
+function kanbun_reorder(text){
+    let kunten_flag = "", reten_flag = false, tate_flag = false;
+    let split_text = kanbun_split(text);
+    let kanbun_two = null, kanbun_three = null, kanbun_four = null;
+    let kanbun_middle = null, kanbun_down = null;
+    let kanbun_otsu = null, kanbun_hei = null, kanbun_tei = null;
+    let kanbun_chi = null, kanbun_jin = null;
+    let stock = new Array();
+    let result = new Array();
 
-    split_text.forEach(function (match) {
-        var tateten=(typeof match[6] != 'undefined')?match[6]:"";
-        var kunten=(typeof match[7] != 'undefined')?match[7].slice(2,-1):"";
-        var saidoku = match[4];
-        var saiyomi = match[5];
+    split_text.forEach(match=>{
+        const tateten = (typeof match[6] != 'undefined')?match[6]:"";
+        const kunten = (typeof match[7] != 'undefined')?match[7].slice(2,-1):"";
+        const saidoku = match[4];
+        const saiyomi = match[5];
         if (typeof saidoku != 'undefined') {
             // 再読処理。matchをそのままresultに入れ、
             // matchはclone()してそこの読み・送りを再読・再送りにする。
             result.push(match);
             match = match.clone();
-            match[2]=saidoku;
-            match[3]=saiyomi;
+            match[2] = saidoku;
+            match[3] = saiyomi;
         }
         // 前の漢字のレ点・竪点への対応
         if (reten_flag) {
             stock.unshift(match);
-            reten_flag=false;
+            reten_flag = false;
         } else if (tate_flag) {
             stock.push(match);
-            tate_flag=false;
+            tate_flag = false;
         } else {
             stock = new Array(match);
         }
@@ -290,44 +291,44 @@ function kanbun_reorder (text){
             kunten_flag = RegExp.lastMatch;
         }
         if (kunten.match(/レ/)) {
-            reten_flag=true; // 「一レ」の場合は reten_flag だけ true にして次に。
+            reten_flag = true; // 「一レ」の場合は reten_flag だけ true にして次に。
         } else if (tateten == "‐") {
-            tate_flag=true;
+            tate_flag = true;
         } else if (kunten_flag.length > 0) {
             // 現在漢字にレ点・竪点がない場合は訓点処理に入る
             if (kunten_flag.match(/一/)) {
                 result = result.concat(stock).concat(kanbun_two);
                 result = result.concat(kanbun_three).concat(kanbun_four);
-                kanbun_two=null;
-                kanbun_three=null;
-                kanbun_four=null;}
-            else if (kunten_flag.match(/二/)) kanbun_two=stock;
-            else if (kunten_flag.match(/三/)) kanbun_three=stock;
-            else if (kunten_flag.match(/四/)) kanbun_four=stock;
+                kanbun_two = null;
+                kanbun_three = null;
+                kanbun_four = null;}
+            else if (kunten_flag.match(/二/)) kanbun_two = stock;
+            else if (kunten_flag.match(/三/)) kanbun_three = stock;
+            else if (kunten_flag.match(/四/)) kanbun_four = stock;
             else if (kunten_flag.match(/上/)) {
                 result = result.concat(stock).concat(kanbun_middle);
                 result = result.concat(kanbun_down);
                 kanbun_middle=null;
                 kanbun_down=null;}
-            else if (kunten_flag.match(/中/)) kanbun_middle=stock;
-            else if (kunten_flag.match(/下/)) kanbun_down=stock;
+            else if (kunten_flag.match(/中/)) kanbun_middle = stock;
+            else if (kunten_flag.match(/下/)) kanbun_down = stock;
             else if (kunten_flag.match(/甲/)) {
                 result = result.concat(stock).concat(kanbun_otsu);
                 result = result.concat(kanbun_hei).concat(kanbun_tei);
-                kanbun_otsu=null;
-                kanbun_hei=null;
-                kanbun_tei=null;
+                kanbun_otsu = null;
+                kanbun_hei = null;
+                kanbun_tei = null;
             }
-            else if (kunten_flag.match(/乙/)) kanbun_otsu=stock;
-            else if (kunten_flag.match(/丙/)) kanbun_hei=stock;
-            else if (kunten_flag.match(/丁/)) kanbun_tei=stock;
+            else if (kunten_flag.match(/乙/)) kanbun_otsu = stock;
+            else if (kunten_flag.match(/丙/)) kanbun_hei = stock;
+            else if (kunten_flag.match(/丁/)) kanbun_tei = stock;
             else if (kunten_flag.match(/天/)) {
                 result = result.concat(stock).concat(kanbun_chi);
                 result = result.concat(kanbun_jin);
-                kanbun_chi=null;
-                kanbun_jin=null;}
-            else if (kunten_flag.match(/地/)) kanbun_chi=stock;
-            else if (kunten_flag.match(/人/)) kanbun_jin=stock;
+                kanbun_chi = null;
+                kanbun_jin = null;}
+            else if (kunten_flag.match(/地/)) kanbun_chi = stock;
+            else if (kunten_flag.match(/人/)) kanbun_jin = stock;
             else console.log ("error! match="+match);
             kunten_flag="";
         } else {
@@ -345,12 +346,12 @@ function kanbun_reorder (text){
  * @returns HTMLデータ
  * @type string
  */
-function kanbun_to_kakikudashi (text,yomi,hiragana){
-    var reordered=kanbun_reorder(text);
-    var result="";
-    reordered.forEach(function(match) {
-        var kanji_part = kanbun_match_yomi(match,yomi,false);
-        var okuri_part = kanbun_match_okuri(match);
+function kanbun_to_kakikudashi(text,yomi,hiragana){
+    const reordered = kanbun_reorder(text);
+    let result="";
+    reordered.forEach(match=>{
+        const kanji_part = kanbun_match_yomi(match,yomi,false);
+        const okuri_part = kanbun_match_okuri(match);
         result+="<nobr>"+kanji_part+okuri_part +"</nobr><wbr/>";
     });
     if (hiragana) result=kanbun_katakana_to_hiragana(result);
@@ -358,7 +359,7 @@ function kanbun_to_kakikudashi (text,yomi,hiragana){
 }
 
 
-// ＊＊＊＊＊＊＊＊ HTML処理（要jquery） ＊＊＊＊＊＊＊＊
+// ＊＊＊＊＊＊＊＊ HTML処理 ＊＊＊＊＊＊＊＊
 //
 // 元のデータを <!--XXXX--> とコメントに入れて保存する。
 //
@@ -368,11 +369,11 @@ function kanbun_to_kakikudashi (text,yomi,hiragana){
  * @private
  */
 function kanbun_orig_text (text) {
-    var orig_text;
+    let orig_text;
     if (text.match(/<!--([^>]+)-->/)) {
-        orig_text=RegExp.$1;
+        orig_text = RegExp.$1;
     } else {
-        orig_text=text;
+        orig_text = text;
     }
     return orig_text;
 };
@@ -384,14 +385,14 @@ function kanbun_orig_text (text) {
  * @returns {none}
  */
 function kanbun_html_to_original (id) {
-    $(id+"[class=kanbun]").each(function () {
-        var orig_text=kanbun_orig_text($(this).html());
-        $(this).html(orig_text);
+    document.querySelectorAll(id+"[class=kanbun]").forEach(elm=>{
+        const orig_text = kanbun_orig_text(elm.innerHTML);
+        elm.innerHTML = orig_text;
     });
 }
 
 /**
- * HTMLのIDノードを漢文に変換する。（要jQuery）
+ * HTMLのIDノードを漢文に変換する。
  * @param {string} id HTML node
  * @param {boolean} yomi 読み仮名表示
  * @param {boolean} okuri 送り仮名表示
@@ -401,24 +402,24 @@ function kanbun_html_to_original (id) {
  * @type {none}
  */
 function kanbun_html_to_kanbun (id,yomi,okuri,ten,kutou,unicode) {
-    $(id+"[class=kanbun]").each(function () {
-        var orig_text=kanbun_orig_text($(this).html());
-        var new_text=kanbun_to_kanbun(orig_text,yomi,okuri,ten,kutou,unicode);
-        $(this).html(new_text+"<!--"+orig_text+"-->");
+    document.querySelectorAll(id+"[class=kanbun]").forEach(elm=>{
+        const orig_text = kanbun_orig_text(elm.innerHTML);
+        const new_text = kanbun_to_kanbun(orig_text,yomi,okuri,ten,kutou,unicode);
+        elm.innerHTML = new_text+"<!--"+orig_text+"-->";
     });
 }
 
 /**
- * HTMLのIDノードを書き下し文に変換する。（要jQuery）
+ * HTMLのIDノードを書き下し文に変換する。
  * @param {string} id HTML node
  * @param {boolean} yomi 読み表示
  * @param {boolean} hiragana カタカナを平仮名に変換
  * @type {none}
  */
 function kanbun_html_to_kakikudashi (id,yomi,hiragana) {
-    $(id+"[class=kanbun]").each(function () {
-        var orig_text=kanbun_orig_text($(this).html());
-        var new_text=kanbun_to_kakikudashi(orig_text,yomi,hiragana);
-        $(this).html(new_text+"<!--"+orig_text+"-->");
+    document.querySelectorAll(id+"[class=kanbun]").forEach(elm=>{
+        const orig_text = kanbun_orig_text(elm.innerHTML);
+        const new_text = kanbun_to_kakikudashi(orig_text,yomi,hiragana);
+        elm.innerHTML = new_text+"<!--"+orig_text+"-->";
     });
 }
